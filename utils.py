@@ -1,6 +1,13 @@
 import numpy as np
+import matplotlib.image as mpimg
 
 from constants import IMAGE_HEIGHT, IMAGE_WIDTH, IMAGE_CHANNELS, BATCH_SIZE
+
+def load_image(data_dir, image_file):
+    """
+    Load RGB images from a file
+    """
+    return mpimg.imread(os.path.join(data_dir, image_file.strip()))
 
 def data_batch_generator(data_dir, image_paths, steering_angles, batch_size=BATCH_SIZE, is_training=True):
 	'''
@@ -25,3 +32,15 @@ def data_batch_generator(data_dir, image_paths, steering_angles, batch_size=BATC
 			# unpack the paths for images, we need to use the path to read the images
 			center, left, right = image_paths[index]
 			steering_angle = image_paths[index]  # this is ready to be used in the model
+
+			# not argumenting initially for testing purposes
+			image = load_image(data_dir, center)
+
+			images[i] = image
+			steers[i] = steering_angle
+
+			i += 1
+			if i == batch_size:
+				break
+
+		yield images, steers
