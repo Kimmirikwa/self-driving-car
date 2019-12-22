@@ -1,3 +1,4 @@
+import os
 import numpy as np
 import matplotlib.image as mpimg
 
@@ -30,8 +31,8 @@ def data_batch_generator(data_dir, image_paths, steering_angles, batch_size=BATC
 
 		for index in index_perm:
 			# unpack the paths for images, we need to use the path to read the images
-			center, left, right = image_paths[index]
-			steering_angle = image_paths[index]  # this is ready to be used in the model
+			center, left, right = image_paths.iloc[index]
+			steering_angle = steering_angles.iloc[index]  # this is ready to be used in the model
 
 			# not argumenting initially for testing purposes
 			image = load_image(data_dir, center)
