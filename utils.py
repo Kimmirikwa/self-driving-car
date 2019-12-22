@@ -1,6 +1,7 @@
-import os
+import os, cv2
 import numpy as np
 import matplotlib.image as mpimg
+from keras.preprocessing.image import random_shift, random_rotation
 
 from constants import IMAGE_HEIGHT, IMAGE_WIDTH, IMAGE_CHANNELS, BATCH_SIZE
 
@@ -10,17 +11,97 @@ def load_image(data_dir, image_file):
     """
     return mpimg.imread(os.path.join(data_dir, image_file.strip()))
 
+def crop(image):
+    """
+    Crop the image (removing the sky at the top and the car front at the bottom)
+    """
+    return image[60:-25, :, :] # remove the sky and the car front
+
+
+def resize(image):
+    """
+    Resize the image to the input shape used by the network model
+    """
+    return cv2.resize(image, (IMAGE_WIDTH, IMAGE_HEIGHT), cv2.INTER_AREA)
+
+
+def rgb2yuv(image):
+    """
+    Convert the image from RGB to YUV (This is what the NVIDIA model does)
+    """
+    return cv2.cvtColor(image, cv2.COLOR_RGB2YUV)
+
+
+def preprocess(image):
+    """
+    Combine all preprocess functions into one
+    """
+    image = crop(image)
+    image = resize(image)
+    image = rgb2yuv(image)
+    return image
+
 def choose_image(data_dir, center, left, right, steering_angle):
     """
-    Randomly choose an image from the center, left or right, and adjust
-    the steering angle.
+    Randomly choose an image from the center, left or right
+    the steering is adjusted when left or right camera is selected
     """
     choice = np.random.choice(3)
+    camera = center
+    angle_change = 0
     if choice == 0:
-        return load_image(data_dir, left), steering_angle + 0.2
+    	camera = left
+    	angle_change = 0.2
     elif choice == 1:
-        return load_image(data_dir, right), steering_angle - 0.2
-    return load_image(data_dir, center), steering_angle
+    	camera = right
+    	angle_change = -2
+    return load_image(data_dir, camera), steering_angle + angle_change
+
+def random_flip(image, steering_angle):
+    """
+    Randomly flipt the image left <-> right, and adjust the steering angle.
+    """
+    if np.random.rand() < 0.5:
+        image = cv2.flip(image, 1)
+        steering_angle = -steering_angle
+    return image, steering_angle
+
+def shift_image(image):
+	image = random_shift(
+		image,
+		0.1,
+		0.1,
+		row_axis=1,
+		col_axis=2,
+		channel_axis=0,
+		fill_mode='nearest',
+		cval=0.0,
+		interpolation_order=1)
+
+	return image
+
+def rotate_image(image):
+	image = random_rotation(
+	    image,
+	    20,
+	    row_axis=1,
+	    col_axis=2,
+	    channel_axis=0,
+	    fill_mode='nearest',
+	    cval=0.0,
+	    interpolation_order=1
+	)
+
+	return image
+
+def argument(data_dir, center, left, right, steering_angle, range_x=100, range_y=10):
+	# select one of the three images
+	image, steering_angle = choose_image(data_dir, center, left, right, steering_angle)
+	image, steering_angle = random_flip(image, steering_angle)
+	image = shift_image(image)
+	image = rotate_image(image)
+
+	return image, steering_angle
 
 def data_batch_generator(data_dir, image_paths, steering_angles, batch_size=BATCH_SIZE, is_training=True):
 	'''
@@ -47,12 +128,12 @@ def data_batch_generator(data_dir, image_paths, steering_angles, batch_size=BATC
 			steering_angle = steering_angles.iloc[index]  # this is ready to be used in the model
 
 			# attempt to argument the image when training
-			if is_training:
-				image, steering_angle = choose_image(data_dir, center, left, right, steering_angle)
+			if is_training and np.random.rand() < 0.7:
+				image, steering_angle = argument(data_dir, center, left, right, steering_angle)
 			else:
 				image = load_image(data_dir, center)
 
-			images[i] = image
+			images[i] = preprocess(image)
 			steers[i] = steering_angle
 
 			i += 1
