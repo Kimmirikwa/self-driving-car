@@ -15,8 +15,8 @@ def load_data():
 	# 'steering' will be the labels, thus this is a supervised model training
 	driving_df = pd.read_csv(DATA_DIR, names=['center', 'left', 'right', 'steering', 'throttle', 'reverse', 'speed'])
 
-	X = driving_df[['center', 'left', 'right']][:200]  # training features
-	y = driving_df['steering'][:200]  # labels
+	X = driving_df[['center', 'left', 'right']]  # training features
+	y = driving_df['steering']  # labels
 
 	# split data to have training set and validation set
 	X_train, X_validation, y_train, y_validation = train_test_split(X, y, test_size=0.3, random_state=42)
