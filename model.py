@@ -93,6 +93,9 @@ def train_model(model, X_train, X_valid, y_train, y_valid):
 	# use Adam optimizer to minimize the squared error
 	model.compile(loss='mean_squared_error', optimizer=Adam(lr=LEARNING_RATE))
 
+	# fits a generator
+	# this enables data preprosessing and training of the model to be done in parallel
+	# in this case image augmentation will be done in the CPU while model training is in the GPU
 	model.fit_generator(data_batch_generator(DATA_DIR, X_train, y_train, BATCH_SIZE, True),
                         SAMPLES_PER_EPOCH,
                         NB_EPOCH,
@@ -110,7 +113,7 @@ def main():
 	model = build_model()
 
 	# train the model using data and save it
-	#train_model(model, *data)
+	train_model(model, *data)
 
 if __name__ == "__main__":
 	main()

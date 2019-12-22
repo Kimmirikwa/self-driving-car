@@ -10,6 +10,18 @@ def load_image(data_dir, image_file):
     """
     return mpimg.imread(os.path.join(data_dir, image_file.strip()))
 
+def choose_image(data_dir, center, left, right, steering_angle):
+    """
+    Randomly choose an image from the center, left or right, and adjust
+    the steering angle.
+    """
+    choice = np.random.choice(3)
+    if choice == 0:
+        return load_image(data_dir, left), steering_angle + 0.2
+    elif choice == 1:
+        return load_image(data_dir, right), steering_angle - 0.2
+    return load_image(data_dir, center), steering_angle
+
 def data_batch_generator(data_dir, image_paths, steering_angles, batch_size=BATCH_SIZE, is_training=True):
 	'''
 		gets image paths and uses them to read images. the images are then mapped to their steering angles.
@@ -34,8 +46,11 @@ def data_batch_generator(data_dir, image_paths, steering_angles, batch_size=BATC
 			center, left, right = image_paths.iloc[index]
 			steering_angle = steering_angles.iloc[index]  # this is ready to be used in the model
 
-			# not argumenting initially for testing purposes
-			image = load_image(data_dir, center)
+			# attempt to argument the image when training
+			if is_training:
+				image, steering_angle = choose_image(data_dir, center, left, right, steering_angle)
+			else:
+				image = load_image(data_dir, center)
 
 			images[i] = image
 			steers[i] = steering_angle
