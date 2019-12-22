@@ -1,6 +1,7 @@
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from keras.models import Sequential
+from keras.layers import Lambda, Conv2D
 
 from constants import INPUT_SHAPE
 
@@ -21,7 +22,7 @@ def load_data():
 	return X_train, X_test, y_train, y_test
 
 def build_model():
-	"""
+    '''
     the model is based on the NVIDIA model
 
     the network has 9 layers, including a normalization layer, 5 convolutional
@@ -50,12 +51,28 @@ def build_model():
 
 	3. fully connected layers
 		designed to act as the controller for steering
-		the layers have decreasing number of neurons 100, 50, 10. they all use ELU activation function 
-    """
+		the layers have decreasing number of neurons 100, 50, 10. they all use ELU activation function
+    '''
+    model = Sequential()
+
+    # the normalization layer
+    model.add(Lambda(lambda x: x/127.5-1.0, input_shape=INPUT_SHAPE))
+
+    # the convolutional layers
+    model.add(Conv2D(24, 5, 5, activation='elu', subsample=(2, 2)))
+    model.add(Conv2D(36, 5, 5, activation='elu', subsample=(2, 2)))
+    model.add(Conv2D(48, 5, 5, activation='elu', subsample=(2, 2)))
+    model.add(Conv2D(64, 3, 3, activation='elu'))
+    model.add(Conv2D(64, 3, 3, activation='elu'))
+
+    return model
 
 def main():
 	# load and split data to training and testing set
 	data = load_data()
+
+	# building the model
+	model = build_model()
 
 if __name__ == "__main__":
 	main()
