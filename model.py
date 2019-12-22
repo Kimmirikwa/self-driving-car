@@ -43,14 +43,14 @@ def build_model():
     	to get the output size we use the formular [(W−K+2P)/S]+1, where W is the input volume, 
     	K is the kernel size, P is the padding  and S is the stride
     	the layers therefore lead to the following transformations
-		    conv1: 5x5, filter: 24, strides: 2x2, activation: ELU input 3@160x320 => output 24@78x158
-		    conv2: 5x5, filter: 36, strides: 2x2, activation: ELU input 24@78x158 => output 36@37x77
-		    conv3: 5x5, filter: 48, strides: 2x2, activation: ELU input 36@37x77 => output 48@17x37
-		    conv4: 3x3, filter: 64, strides: 1x1, activation: ELU input 48@17x37 => output 64@15x35
-		    conv5: 3x3, filter: 64, strides: 1x1, activation: ELU input 64@15x35 => output 64@13x33
+		    conv1: 5x5, filter: 24, strides: 2x2, activation: ELU input 3@66x200 => output 24@31x98
+		    conv2: 5x5, filter: 36, strides: 2x2, activation: ELU input 24@31x98 => output 36@14x47
+		    conv3: 5x5, filter: 48, strides: 2x2, activation: ELU input 36@14x47 => output 48@5x22
+		    conv4: 3x3, filter: 64, strides: 1x1, activation: ELU input 48@5x22 => output 64@3x20
+		    conv5: 3x3, filter: 64, strides: 1x1, activation: ELU input 64@3x20 => output 64@1x18
 
 		the output of the last convolution layer is flattened to 1164 in order to work with fully connected layers
-		the output will be 64 x 13 x 33 = 27456
+		the output will be 64 x 1 x 18 = 1152
 
 	3. fully connected layers
 		designed to act as the controller for steering
