@@ -1,7 +1,7 @@
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from keras.models import Sequential
-from keras.layers import Lambda, Conv2D
+from keras.layers import Lambda, Conv2D, Flatten, Dense
 
 from constants import INPUT_SHAPE
 
@@ -48,6 +48,7 @@ def build_model():
 		    conv5: 3x3, filter: 64, strides: 1x1, activation: ELU input 64@3x20 => output 64@1x18
 
 		the output of the last convolution layer is flattened to 1164 in order to work with fully connected layers
+		the output will be 64 x 1 x 18 = 1152
 
 	3. fully connected layers
 		designed to act as the controller for steering
@@ -64,6 +65,17 @@ def build_model():
     model.add(Conv2D(48, 5, 5, activation='elu', subsample=(2, 2)))
     model.add(Conv2D(64, 3, 3, activation='elu'))
     model.add(Conv2D(64, 3, 3, activation='elu'))
+
+
+    model.add(Flatten())
+
+    # fully connected layers
+    model.add(Dense(100, activation='elu'))
+    model.add(Dense(50, activation='elu'))
+    model.add(Dense(10, activation='elu'))
+    model.add(Dense(1))
+
+    model.summary()
 
     return model
 
