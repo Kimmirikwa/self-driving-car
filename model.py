@@ -1,11 +1,12 @@
 import pandas as pd
 from sklearn.model_selection import train_test_split
+from keras.models import Sequential
 
 
 def load_data():
 	# create a dataframe to hold the data
 	# columns names are specified as shown below
-	# the first 3 columns are for images from the 3 cameras and will acting as the features for our training model
+	# the first 3 columns are for paths of images from the 3 cameras and will acting as the features for our training model
 	# 'steering' will be the labels, thus this is a supervised model training
 	driving_df = pd.read_csv('data/driving_log.csv', names=['center', 'left', 'right', 'steering', 'throttle', 'reverse', 'speed'])
 
