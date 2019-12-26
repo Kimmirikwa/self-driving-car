@@ -55,7 +55,7 @@ def choose_image(data_dir, center, left, right, steering_angle):
     elif choice == 1:
     	camera = right
     	angle_change = -2
-    return load_image(data_dir, camera), steering_angle + angle_change
+    return preprocess(load_image(data_dir, camera)), steering_angle + angle_change
 
 def random_flip(image, steering_angle):
     """
@@ -171,9 +171,9 @@ def data_batch_generator(data_dir, image_paths, steering_angles, batch_size=BATC
 			if is_training and np.random.rand() < 0.7:
 				image, steering_angle = argument(data_dir, center, left, right, steering_angle)
 			else:
-				image = load_image(data_dir, center)
+				image = preprocess(load_image(data_dir, center))
 
-			images[i] = preprocess(image)
+			images[i] = image
 			steers[i] = steering_angle
 
 			i += 1
