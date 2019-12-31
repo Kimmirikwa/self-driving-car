@@ -1,7 +1,7 @@
 import os, cv2
 import numpy as np
 import matplotlib.image as mpimg
-from keras.preprocessing.image import random_shift, random_rotation
+from keras.preprocessing.image import random_shift, random_rotation, ImageDataGenerator
 
 from constants import IMAGE_HEIGHT, IMAGE_WIDTH, IMAGE_CHANNELS, BATCH_SIZE
 
@@ -57,91 +57,22 @@ def choose_image(data_dir, center, left, right, steering_angle):
     	angle_change = -2
     return preprocess(load_image(data_dir, camera)), steering_angle + angle_change
 
-def random_flip(image, steering_angle):
-    """
-    Randomly flipt the image left <-> right, and adjust the steering angle.
-    """
-    if np.random.rand() < 0.5:
-        image = cv2.flip(image, 1)
-        steering_angle = -steering_angle
-    return image, steering_angle
-
-def shift_image(image):
-	image = random_shift(
-		image,
-		0.1,
-		0.1,
-		row_axis=1,
-		col_axis=2,
-		channel_axis=0,
-		fill_mode='nearest',
-		cval=0.0,
-		interpolation_order=1)
-
-	return image
-
-def rotate_image(image):
-	image = random_rotation(
-	    image,
-	    20,
-	    row_axis=1,
-	    col_axis=2,
-	    channel_axis=0,
-	    fill_mode='nearest',
-	    cval=0.0,
-	    interpolation_order=1
-	)
-
-	return image
-
-def random_shadow(image):
-    """
-    Generates and adds random shadow
-    """
-    # (x1, y1) and (x2, y2) forms a line
-    # xm, ym gives all the locations of the image
-    x1, y1 = IMAGE_WIDTH * np.random.rand(), 0
-    x2, y2 = IMAGE_WIDTH * np.random.rand(), IMAGE_HEIGHT
-    xm, ym = np.mgrid[0:IMAGE_HEIGHT, 0:IMAGE_WIDTH]
-
-    # mathematically speaking, we want to set 1 below the line and zero otherwise
-    # Our coordinate is up side down.  So, the above the line: 
-    # (ym-y1)/(xm-x1) > (y2-y1)/(x2-x1)
-    # as x2 == x1 causes zero-division problem, we'll write it in the below form:
-    # (ym-y1)*(x2-x1) - (y2-y1)*(xm-x1) > 0
-    mask = np.zeros_like(image[:, :, 1])
-    mask[(ym - y1) * (x2 - x1) - (y2 - y1) * (xm - x1) > 0] = 1
-
-    # choose which side should have shadow and adjust saturation
-    cond = mask == np.random.randint(2)
-    s_ratio = np.random.uniform(low=0.2, high=0.5)
-
-    # adjust Saturation in HLS(Hue, Light, Saturation)
-    hls = cv2.cvtColor(image, cv2.COLOR_RGB2HLS)
-    hls[:, :, 1][cond] = hls[:, :, 1][cond] * s_ratio
-    return cv2.cvtColor(hls, cv2.COLOR_HLS2RGB)
-
-
-def random_brightness(image):
-    """
-    Randomly adjust brightness of the image.
-    """
-    # HSV (Hue, Saturation, Value) is also called HSB ('B' for Brightness).
-    hsv = cv2.cvtColor(image, cv2.COLOR_RGB2HSV)
-    ratio = 1.0 + 0.4 * (np.random.rand() - 0.5)
-    hsv[:,:,2] =  hsv[:,:,2] * ratio
-    return cv2.cvtColor(hsv, cv2.COLOR_HSV2RGB)
-
 def argument(data_dir, center, left, right, steering_angle, range_x=100, range_y=10):
-	# select one of the three images
-	image, steering_angle = choose_image(data_dir, center, left, right, steering_angle)
-	image, steering_angle = random_flip(image, steering_angle)
-	image = shift_image(image)
-	image = rotate_image(image)
-	image = random_shadow(image)
-	image = random_brightness(image)
+    image, steering_angle = choose_image(data_dir, center, left, right, steering_angle)
 
-	return image, steering_angle
+    datagen = ImageDataGenerator(
+        rotation_range=40,
+        width_shift_range=0.2,
+        height_shift_range=0.2,
+        shear_range=0.2,
+        zoom_range=0.2,
+        horizontal_flip=True,
+        fill_mode='nearest')
+
+    images = datagen.flow(image.reshape((1,) + image.shape), batch_size=1)
+    image = images[0]
+
+    return image, steering_angle
 
 def data_batch_generator(data_dir, image_paths, steering_angles, batch_size=BATCH_SIZE, is_training=True):
 	'''

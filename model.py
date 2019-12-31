@@ -1,14 +1,14 @@
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from keras.models import Sequential
-from keras.layers import Lambda, Conv2D, Flatten, Dense
+from keras.layers import Lambda, Conv2D, Flatten, Dense, Dropout
 from keras.callbacks import ModelCheckpoint
 from keras.optimizers import Adam
 
 from utils import data_batch_generator
 from constants import DATA_DIR, INPUT_SHAPE, LEARNING_RATE, SAMPLES_PER_EPOCH, NB_EPOCH, BATCH_SIZE
 
-def load_data():
+def load_data1():
 	# create a dataframe to hold the data
 	# columns names are specified as shown below
 	# the first 3 columns are for paths of images from the 3 cameras and will acting as the features for our training model
@@ -22,6 +22,16 @@ def load_data():
 	X_train, X_validation, y_train, y_validation = train_test_split(X, y, test_size=0.3, random_state=42)
 
 	return X_train, X_validation, y_train, y_validation
+
+def load_data():
+    driving_df = pd.read_csv(DATA_DIR, names=['center', 'left', 'right', 'steering', 'throttle', 'reverse', 'speed'])
+
+    X = driving_df[['center', 'left', 'right']]
+    y = driving_df['steering']
+
+    X_train, X_validation, y_train, y_validation = train_test_split(X, y, test_size=0.3, random_state=42)
+
+    return X_train, X_validation, y_train, y_validation
 
 def build_model():
     '''
@@ -70,6 +80,8 @@ def build_model():
 
 
     model.add(Flatten())
+
+    model.add(Dropout(0.2))  # dropout to prevent overfitting
 
     # fully connected layers
     model.add(Dense(100, activation='elu'))
