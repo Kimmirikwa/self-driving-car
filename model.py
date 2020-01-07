@@ -1,35 +1,22 @@
 import pandas as pd
+import numpy as np
 from sklearn.model_selection import train_test_split
 from keras.models import Sequential
 from keras.layers import Lambda, Conv2D, Flatten, Dense, Dropout
 from keras.callbacks import ModelCheckpoint
 from keras.optimizers import Adam
+from keras.preprocessing.image import ImageDataGenerator
 
 from utils import data_batch_generator
 from constants import DATA_DIR, INPUT_SHAPE, LEARNING_RATE, SAMPLES_PER_EPOCH, NB_EPOCH, BATCH_SIZE
 
-def load_data1():
-	# create a dataframe to hold the data
-	# columns names are specified as shown below
-	# the first 3 columns are for paths of images from the 3 cameras and will acting as the features for our training model
-	# 'steering' will be the labels, thus this is a supervised model training
-	driving_df = pd.read_csv(DATA_DIR, names=['center', 'left', 'right', 'steering', 'throttle', 'reverse', 'speed'])
-
-	X = driving_df[['center', 'left', 'right']]  # training features
-	y = driving_df['steering']  # labels
-
-	# split data to have training set and validation set
-	X_train, X_validation, y_train, y_validation = train_test_split(X, y, test_size=0.3, random_state=42)
-
-	return X_train, X_validation, y_train, y_validation
-
 def load_data():
     driving_df = pd.read_csv(DATA_DIR, names=['center', 'left', 'right', 'steering', 'throttle', 'reverse', 'speed'])
 
-    X = driving_df[['center', 'left', 'right']]
-    y = driving_df['steering']
+    X = driving_df[20000:22000][['center', 'left', 'right']]
+    y = driving_df[20000:22000]['steering']
 
-    X_train, X_validation, y_train, y_validation = train_test_split(X, y, test_size=0.3, random_state=42)
+    X_train, X_validation, y_train, y_validation = train_test_split(X, y, test_size=0.2, random_state=42)
 
     return X_train, X_validation, y_train, y_validation
 
@@ -81,7 +68,7 @@ def build_model():
 
     model.add(Flatten())
 
-    model.add(Dropout(0.2))  # dropout to prevent overfitting
+    model.add(Dropout(0.2))  # dropout to reduce overfitting
 
     # fully connected layers
     model.add(Dense(100, activation='elu'))
@@ -93,7 +80,7 @@ def build_model():
 
     return model
 
-def train_model(model, X_train, X_valid, y_train, y_valid):
+def train_model(model, X_train, X_valid, y_train, y_valid, steps_per_epoch=SAMPLES_PER_EPOCH):
 	# adding a callback to save the model after every epoch
 	checkpoint = ModelCheckpoint('model-{epoch:03d}.h5',
                              monitor='val_loss',
@@ -109,7 +96,7 @@ def train_model(model, X_train, X_valid, y_train, y_valid):
 	# this enables data preprosessing and training of the model to be done in parallel
 	# in this case image augmentation will be done in the CPU while model training is in the GPU
 	model.fit_generator(data_batch_generator(DATA_DIR, X_train, y_train, BATCH_SIZE, True),
-                        SAMPLES_PER_EPOCH,
+                        steps_per_epoch,
                         NB_EPOCH,
                         max_q_size=1,
                         validation_data=data_batch_generator(DATA_DIR, X_valid, y_valid, BATCH_SIZE, False),
@@ -118,14 +105,10 @@ def train_model(model, X_train, X_valid, y_train, y_valid):
                         verbose=1)
 
 def main():
-	# load and split data to training and testing set
-	data = load_data()
-
-	# building the model
-	model = build_model()
-
-	# train the model using data and save it
-	train_model(model, *data)
+    X_train, X_validation, y_train, y_validation = load_data()
+    steps_per_epoch = len(X_train) / BATCH_SIZE
+    model = build_model()
+    train_model(model, X_train, X_validation, y_train, y_validation)
 
 if __name__ == "__main__":
 	main()
