@@ -1,5 +1,5 @@
 # the directory of the data
-DATA_DIR = 'data/driving_log.csv'
+DATA_DIR = 'log_data/driving_log.csv'
 
 # the images are 66 by 200
 IMAGE_HEIGHT = 66
