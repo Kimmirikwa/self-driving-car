@@ -1,9 +1,12 @@
 import os, cv2
 import numpy as np
 import matplotlib.image as mpimg
+from keras.models import Sequential
 from keras.preprocessing.image import random_shift, random_rotation, ImageDataGenerator
+from keras.callbacks import ModelCheckpoint
+from keras.wrappers.scikit_learn import KerasRegressor
 
-from constants import IMAGE_HEIGHT, IMAGE_WIDTH, IMAGE_CHANNELS, BATCH_SIZE, SHIFT_RANGE
+from constants import DATA_DIR, SAMPLES_PER_EPOCH, IMAGE_HEIGHT, IMAGE_WIDTH, IMAGE_CHANNELS, BATCH_SIZE, SHIFT_RANGE
 
 def load_image(data_dir, image_file):
     """
